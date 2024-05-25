@@ -85,7 +85,6 @@ const ReactFlowProviderScreen: React.FC = () => {
 
   const checkEdgesAndNodes = useCallback(() => {
     let emptyTargetHandlesCount = 0;
-    let emptyTargetNodesCount = 0;
     const connectedNodes = new Set();
     const sourceNodes = new Set();
     let hasMultipleEdges = false;
@@ -93,7 +92,6 @@ const ReactFlowProviderScreen: React.FC = () => {
     edges.forEach((edge) => {
       if (!edge.targetHandle) {
         emptyTargetHandlesCount++;
-        emptyTargetNodesCount++;
       }
       connectedNodes.add(edge.source);
       connectedNodes.add(edge.target);
@@ -109,6 +107,15 @@ const ReactFlowProviderScreen: React.FC = () => {
       (node) => !connectedNodes.has(node.id)
     );
 
+    // Count the number of nodes that don't appear as a target in any edge
+    let emptyTargetNodesCount = 0;
+    nodes.forEach((node) => {
+      const isTarget = edges.some((edge) => edge.target === node.id);
+      if (!isTarget) {
+        emptyTargetNodesCount++;
+      }
+    });
+
     return {
       emptyTargetHandlesCount,
       isNodeUnconnected,
@@ -119,26 +126,28 @@ const ReactFlowProviderScreen: React.FC = () => {
 
   const onSave = useCallback(() => {
     if (reactFlowInstance) {
-      const {
-        emptyTargetHandlesCount,
-        isNodeUnconnected,
-        hasMultipleEdges,
-        emptyTargetNodesCount,
-      } = checkEdgesAndNodes();
-      if (
-        nodes.length > 1 &&
-        (emptyTargetHandlesCount > 1 ||
-          isNodeUnconnected ||
-          hasMultipleEdges ||
-          emptyTargetNodesCount > 1)
-      ) {
-        alert(
-          "Error: One Node and more than one Node has empty target handles or more than one edge originating from a source node or more than one target node is empty."
-        );
+      const { isNodeUnconnected, hasMultipleEdges, emptyTargetNodesCount } =
+        checkEdgesAndNodes();
+      let errorMessage = "";
+
+      if (nodes.length > 1) {
+        if (hasMultipleEdges) {
+          errorMessage +=
+            "More than one edge is originating from a source node. ";
+        }
+        console.log("emptyTargetNodesCount", emptyTargetNodesCount);
+        if (emptyTargetNodesCount > 1) {
+          errorMessage += "More than one target node is empty. ";
+        }
+        if (isNodeUnconnected) {
+          errorMessage += "There is a node that is not connected. ";
+        }
+      }
+      if (errorMessage) {
+        alert(`Error: ${errorMessage}`);
         toast({
           title: "Error!",
-          description:
-            "One Node and more than one Node has empty target handles or more than one edge originating from a source node or more than one target node is empty.",
+          description: errorMessage,
         });
       } else {
         const flow = reactFlowInstance.toObject();
