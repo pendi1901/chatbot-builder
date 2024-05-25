@@ -85,38 +85,60 @@ const ReactFlowProviderScreen: React.FC = () => {
 
   const checkEdgesAndNodes = useCallback(() => {
     let emptyTargetHandlesCount = 0;
+    let emptyTargetNodesCount = 0;
     const connectedNodes = new Set();
+    const sourceNodes = new Set();
+    let hasMultipleEdges = false;
 
     edges.forEach((edge) => {
       if (!edge.targetHandle) {
         emptyTargetHandlesCount++;
+        emptyTargetNodesCount++;
       }
       connectedNodes.add(edge.source);
       connectedNodes.add(edge.target);
+
+      if (sourceNodes.has(edge.source)) {
+        hasMultipleEdges = true;
+      } else {
+        sourceNodes.add(edge.source);
+      }
     });
 
     const isNodeUnconnected = nodes.some(
       (node) => !connectedNodes.has(node.id)
     );
 
-    return { emptyTargetHandlesCount, isNodeUnconnected };
+    return {
+      emptyTargetHandlesCount,
+      isNodeUnconnected,
+      hasMultipleEdges,
+      emptyTargetNodesCount,
+    };
   }, [nodes, edges]);
 
   const onSave = useCallback(() => {
     if (reactFlowInstance) {
-      const { emptyTargetHandlesCount, isNodeUnconnected } =
-        checkEdgesAndNodes();
+      const {
+        emptyTargetHandlesCount,
+        isNodeUnconnected,
+        hasMultipleEdges,
+        emptyTargetNodesCount,
+      } = checkEdgesAndNodes();
       if (
         nodes.length > 1 &&
-        (emptyTargetHandlesCount > 1 || isNodeUnconnected)
+        (emptyTargetHandlesCount > 1 ||
+          isNodeUnconnected ||
+          hasMultipleEdges ||
+          emptyTargetNodesCount > 1)
       ) {
         alert(
-          "Error: One Node and more than one Node has empty target handles "
+          "Error: One Node and more than one Node has empty target handles or more than one edge originating from a source node or more than one target node is empty."
         );
         toast({
           title: "Error!",
           description:
-            "One Node and more than one Node has empty target handles",
+            "One Node and more than one Node has empty target handles or more than one edge originating from a source node or more than one target node is empty.",
         });
       } else {
         const flow = reactFlowInstance.toObject();
@@ -204,11 +226,4 @@ const ReactFlowProviderScreen: React.FC = () => {
   );
 };
 
-// export default ReactFlowProviderScreen;
-const FlowWithProvider: React.FC = () => (
-  <ReactFlowProvider>
-    <ReactFlowProviderScreen />
-  </ReactFlowProvider>
-);
-
-export default FlowWithProvider;
+export default ReactFlowProviderScreen;
