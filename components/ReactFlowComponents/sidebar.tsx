@@ -1,5 +1,7 @@
 import React, { ChangeEvent, DragEvent, FC } from "react";
+import { nodeTypes } from "@/components/ReactFlowComponents/NodeTypes"; // Import the node types
 
+// props that the Sidebar component will receive
 interface SidebarProps {
   nodeName: string;
   setNodeName: (name: string) => void;
@@ -8,6 +10,7 @@ interface SidebarProps {
   onSave: () => void;
 }
 
+// Sidebar functional component
 const Sidebar: FC<SidebarProps> = ({
   nodeName,
   setNodeName,
@@ -19,6 +22,7 @@ const Sidebar: FC<SidebarProps> = ({
     setNodeName(event.target.value);
   };
 
+  // // Handle the drag start event for nodes
   const onDragStart = (event: DragEvent<HTMLDivElement>, nodeType: string) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";
@@ -51,14 +55,18 @@ const Sidebar: FC<SidebarProps> = ({
           >
             Save Flow
           </button>
+          {/* Extensible dynamic list of draggable nodes */}
           <h3 className="text-xl mb-4 text-black pt-3">Nodes Panel</h3>
-          <div
-            className="p-3 border rounded cursor-move flex justify-center items-center text-white bg-black"
-            onDragStart={(event) => onDragStart(event, "textnode")}
-            draggable
-          >
-            Message Node
-          </div>
+          {nodeTypes.map((node) => (
+            <div
+              key={node.id}
+              className="p-3 border rounded cursor-move flex justify-center items-center text-white bg-black mb-2"
+              onDragStart={(event) => onDragStart(event, node.type)}
+              draggable
+            >
+              {node.name}
+            </div>
+          ))}
         </div>
       )}
     </aside>

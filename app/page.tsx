@@ -29,6 +29,8 @@ import BackgroundVariantSelector from "@/components/ReactFlowComponents/Backgrou
 import { useToast } from "@/components/ui/use-toast";
 
 const flowKey = "flow-key";
+
+// Initial set of nodes
 const initialNodes: Node[] = [
   {
     id: "1",
@@ -37,22 +39,23 @@ const initialNodes: Node[] = [
     position: { x: 0, y: 0 },
   },
 ];
-let id = 0;
-const getId = () => `node_${id++}`;
+let id = 0; // Unique ID generator for new nodes
+const getId = () => `node_${id++}`; // Function to generate a new node ID
 
 const ReactFlowProviderScreen: React.FC = () => {
+  // Memoized node types
   const nodeTypes = useMemo(() => ({ textnode: TextNode }), []);
-  const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+  const reactFlowWrapper = useRef<HTMLDivElement | null>(null); // Reference to the ReactFlow wrapper div
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes); // State for nodes
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]); // State for edges
   const [reactFlowInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance | null>(null);
-  const [selectedElements, setSelectedElements] = useState<Node[]>([]);
-  const [nodeName, setNodeName] = useState<string>("");
+    useState<ReactFlowInstance | null>(null); // ReactFlow instance state
+  const [selectedElements, setSelectedElements] = useState<Node[]>([]); // State for selected nodes
+  const [nodeName, setNodeName] = useState<string>(""); // State for node name
   const [backgroundVariant, setBackgroundVariant] = useState<BackgroundVariant>(
     BackgroundVariant.Dots
-  );
-  const { toast } = useToast();
+  ); // State for background variant
+  const { toast } = useToast(); // Toast notification hook
 
   useEffect(() => {
     if (selectedElements.length > 0) {
@@ -69,6 +72,7 @@ const ReactFlowProviderScreen: React.FC = () => {
     }
   }, [nodeName, selectedElements, setNodes]);
 
+  // Callback for node click event
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
       setSelectedElements([node]);
@@ -83,6 +87,7 @@ const ReactFlowProviderScreen: React.FC = () => {
     [setNodes]
   );
 
+  // Function to check edges and nodes for errors
   const checkEdgesAndNodes = useCallback(() => {
     let emptyTargetHandlesCount = 0;
     const connectedNodes = new Set();
@@ -124,6 +129,7 @@ const ReactFlowProviderScreen: React.FC = () => {
     };
   }, [nodes, edges]);
 
+  // Callback for saving the flow
   const onSave = useCallback(() => {
     if (reactFlowInstance) {
       const { isNodeUnconnected, hasMultipleEdges, emptyTargetNodesCount } =
@@ -161,16 +167,19 @@ const ReactFlowProviderScreen: React.FC = () => {
     }
   }, [reactFlowInstance, nodes, checkEdgesAndNodes]);
 
+  // Callback for connecting nodes
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
+  // Callback for handling drag over event
   const onDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
+  // Callback for handling drop event
   const onDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
@@ -197,6 +206,7 @@ const ReactFlowProviderScreen: React.FC = () => {
   return (
     <div className="flex min-h-screen">
       <div className="flex-grow h-screen" ref={reactFlowWrapper}>
+        {/* Main comp */}
         <ReactFlow
           nodes={nodes}
           nodeTypes={nodeTypes}
@@ -220,6 +230,7 @@ const ReactFlowProviderScreen: React.FC = () => {
           <MiniMap zoomable pannable />
         </ReactFlow>
       </div>
+      {/* Sidebar comp */}
       <Sidebar
         nodeName={nodeName}
         setNodeName={setNodeName}
@@ -227,10 +238,10 @@ const ReactFlowProviderScreen: React.FC = () => {
         setSelectedElements={setSelectedElements}
         onSave={onSave}
       />
-      <BackgroundVariantSelector
+      {/* <BackgroundVariantSelector
         variant={backgroundVariant}
         setVariant={setBackgroundVariant}
-      />
+      /> */}
     </div>
   );
 };
